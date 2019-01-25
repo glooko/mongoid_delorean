@@ -82,7 +82,7 @@ describe Mongoid::Delorean::Trackable do
               u.save!
             end
           }.to change(User, :count).by(1)
-        }.to_not change(Mongoid::Delorean::History, :count).by(1)
+        }.to_not change(Mongoid::Delorean::History, :count)
       end
 
     end
