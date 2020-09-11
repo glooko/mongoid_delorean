@@ -44,7 +44,6 @@ class Footer
   field :content, type: String
 
   embedded_in :page
-
 end
 
 class Author
