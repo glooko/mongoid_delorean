@@ -1,0 +1,112 @@
+# Use RuboCop RSpec
+require: rubocop-rspec
+
+# Common configuration.
+AllCops:
+  Exclude:
+    - Gemfile
+  # Cop names are not displayed in offense messages by default. Change behavior
+  # by overriding DisplayCopNames, or by giving the -D/--display-cop-names
+  # option.
+  DisplayCopNames: true
+  TargetRubyVersion: 2.5.3
+
+RSpec/MessageExpectation:
+  Enabled: false
+
+RSpec/ImplicitSubject:
+  EnforcedStyle: single_statement_only
+
+RSpec/NestedGroups:
+    Max: 4
+
+RSpec/ContextWording:
+  Prefixes:
+    - when
+    - with
+    - without
+    - and
+    - for
+
+RSpec/ExpectChange:
+  Enabled: false
+
+Lint/AmbiguousBlockAssociation:
+  Enabled: true
+  Exclude:
+    - 'spec/**/*'
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+  EnforcedStyleForEmptyBraces: no_space
+  SupportedStyles:
+    - space
+    - no_space
+
+Metrics/BlockLength:
+  Enabled: true
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/MethodLength:
+  CountComments: false  # count full line comments?
+  Max: 15
+
+Metrics/AbcSize:
+  Max: 20
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'spec/**/*'
+
+Style/Documentation:
+  Description: 'Document classes and non-namespace modules.'
+  Enabled: false
+
+Style/AutoResourceCleanup:
+  Description: 'Suggests the usage of an auto resource cleanup version of a method (if available).'
+  Enabled: true
+
+Style/CollectionMethods:
+  Description: 'Preferred collection methods.'
+  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#map-find-select-reduce-size'
+  Enabled: true
+
+Style/EmptyElse:
+  EnforcedStyle: empty
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Style/MethodCalledOnDoEndBlock:
+  Description: 'Avoid chaining a method call on a do...end block.'
+  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#single-line-blocks'
+  Enabled: true
+
+Layout/ExtraSpacing:
+  Description: 'Do not use unnecessary spacing.'
+  Enabled: true
+
+Style/ClassAndModuleChildren:
+  # Checks the style of children definitions at classes and modules.
+  #
+  # Basically there are two different styles:
+  #
+  # `nested` - have each child on a separate line
+  #   class Foo
+  #     class Bar
+  #     end
+  #   end
+  #
+  # `compact` - combine definitions as much as possible
+  #   class Foo::Bar
+  #   end
+  #
+  # The compact style is only forced, for classes / modules with one child.
+  EnforcedStyle: compact
+  SupportedStyles:
+    - nested
+    - compact

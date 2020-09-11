@@ -43,23 +43,23 @@ describe Mongoid::Delorean::Trackable do
     it 'tracks the changes that were made' do
       u = User.create!(name: 'Mark')
       version = u.versions.first
-      version.altered_attributes.should eql({ '_id' => [nil, u.id], 'version' => [nil, 1], 'name' => [nil, 'Mark'] })
+      version.altered_attributes.should eql({'_id' => [nil, u.id], 'version' => [nil, 1], 'name' => [nil, 'Mark']})
 
       u.update_attributes(age: 36)
       version = u.versions.last
-      version.altered_attributes.should eql({ 'version' => [1, 2], 'age' => [nil, 36] })
+      version.altered_attributes.should eql({'version' => [1, 2], 'age' => [nil, 36]})
     end
 
     it 'tracks the full set of attributes at the time of saving' do
       u = User.create!(name: 'Mark')
 
       version = u.versions.first
-      version.full_attributes.should eql({ '_id' => u.id, 'version' => 1, 'name' => 'Mark' })
+      version.full_attributes.should eql({'_id' => u.id, 'version' => 1, 'name' => 'Mark'})
 
       u.update_attributes(age: 36)
 
       version = u.versions.last
-      version.full_attributes.except('created_at', 'updated_at').should eql({ '_id' => u.id, 'version' => 2, 'name' => 'Mark', 'age' => 36 })
+      version.full_attributes.except('created_at', 'updated_at').should eql({'_id' => u.id, 'version' => 2, 'name' => 'Mark', 'age' => 36})
     end
 
     it 'passes validate options to save' do
@@ -67,11 +67,11 @@ describe Mongoid::Delorean::Trackable do
 
       u.email = 'invalid'
       expect { u.save! }.to raise_error
-      expect { u.save!(validate: false) }.to_not raise_error
+      expect { u.save!(validate: false) }.not_to raise_error
     end
 
     describe '#without_history_tracking' do
-      it "it doesn't track the history of the save" do
+      it "doesn't track the history of the save" do
         expect do
           expect do
             u = User.new(name: 'Mark')
@@ -79,7 +79,7 @@ describe Mongoid::Delorean::Trackable do
               u.save!
             end
           end.to change(User, :count).by(1)
-        end.to_not change(Mongoid::Delorean::History, :count)
+        end.not_to change(Mongoid::Delorean::History, :count)
       end
     end
 
@@ -129,7 +129,7 @@ describe Mongoid::Delorean::Trackable do
       a = Article.create!(name: 'My Article')
 
       version = a.versions.first
-      version.altered_attributes.should eql({ '_id' => [nil, a.id], 'version' => [nil, 1], 'name' => [nil, 'My Article'] })
+      version.altered_attributes.should eql({'_id' => [nil, a.id], 'version' => [nil, 1], 'name' => [nil, 'My Article']})
     end
 
     it 'tracks the changes including embedded docs' do
@@ -138,38 +138,38 @@ describe Mongoid::Delorean::Trackable do
       a.save!
 
       version = a.versions.first
-      version.altered_attributes.should eql({ '_id' => [nil, a.id], 'version' => [nil, 1], 'name' => [nil, 'My Article'], 'pages' => [{ '_id' => [nil, page.id], 'name' => [nil, 'Page 1'] }] })
+      version.altered_attributes.should eql({'_id' => [nil, a.id], 'version' => [nil, 1], 'name' => [nil, 'My Article'], 'pages' => [{'_id' => [nil, page.id], 'name' => [nil, 'Page 1']}]})
 
       page.name = 'The Page 1'
       a.save!
 
       version = a.versions.last
-      version.altered_attributes.should eql({ 'pages' => [{ 'name' => ['Page 1', 'The Page 1'] }], 'version' => [1, 2] })
+      version.altered_attributes.should eql({'pages' => [{'name' => ['Page 1', 'The Page 1']}], 'version' => [1, 2]})
 
       section = page.sections.build(body: 'some body text')
       page.save!
       a.save!
 
       version = a.versions.last
-      version.altered_attributes.should eql({ 'pages' => [{ 'sections' => [{ '_id' => [nil, section.id], 'body' => [nil, 'some body text'] }] }], 'version' => [2, 3] })
+      version.altered_attributes.should eql({'pages' => [{'sections' => [{'_id' => [nil, section.id], 'body' => [nil, 'some body text']}]}], 'version' => [2, 3]})
 
       footer = page.build_footer(content: 'some footer text')
       a.save!
 
       version = a.versions.last
-      version.altered_attributes.should eql({ 'pages' => [{ 'sections' => [{}], 'footer' => { '_id' => [nil, footer.id], 'content' => [nil, 'some footer text'] } }], 'version' => [3, 4] })
+      version.altered_attributes.should eql({'pages' => [{'sections' => [{}], 'footer' => {'_id' => [nil, footer.id], 'content' => [nil, 'some footer text']}}], 'version' => [3, 4]})
     end
 
     it 'tracks the full set of attributes at the time of saving' do
       a = Article.create!(name: 'My Article')
 
       version = a.versions.first
-      version.full_attributes.should eql({ '_id' => a.id, 'version' => 1, 'name' => 'My Article', 'pages' => [], 'authors' => [] })
+      version.full_attributes.should eql({'_id' => a.id, 'version' => 1, 'name' => 'My Article', 'pages' => [], 'authors' => []})
 
       a.update_attributes(summary: 'Summary about the article')
 
       version = a.versions.last
-      version.full_attributes.except('created_at', 'updated_at').should eql({ '_id' => a.id, 'version' => 2, 'name' => 'My Article', 'summary' => 'Summary about the article', 'pages' => [], 'authors' => [] })
+      version.full_attributes.except('created_at', 'updated_at').should eql({'_id' => a.id, 'version' => 2, 'name' => 'My Article', 'summary' => 'Summary about the article', 'pages' => [], 'authors' => []})
     end
 
     it 'tracks the full set of attributes including embeds at the time of saving' do
@@ -178,12 +178,12 @@ describe Mongoid::Delorean::Trackable do
       a.save!
 
       version = a.versions.first
-      version.full_attributes.should eql({ '_id' => a.id, 'version' => 1, 'name' => 'My Article', 'pages' => [{ '_id' => page.id, 'name' => 'Page 1', 'sections' => [] }], 'authors' => [] })
+      version.full_attributes.should eql({'_id' => a.id, 'version' => 1, 'name' => 'My Article', 'pages' => [{'_id' => page.id, 'name' => 'Page 1', 'sections' => []}], 'authors' => []})
 
       a.update_attributes(summary: 'Summary about the article')
 
       version = a.versions.last
-      version.full_attributes.except('created_at', 'updated_at').should eql({ '_id' => a.id, 'version' => 2, 'name' => 'My Article', 'pages' => [{ '_id' => page.id, 'name' => 'Page 1', 'sections' => [] }], 'summary' => 'Summary about the article', 'authors' => [] })
+      version.full_attributes.except('created_at', 'updated_at').should eql({'_id' => a.id, 'version' => 2, 'name' => 'My Article', 'pages' => [{'_id' => page.id, 'name' => 'Page 1', 'sections' => []}], 'summary' => 'Summary about the article', 'authors' => []})
     end
 
     it 'tracks changes when an embedded document is saved' do
