@@ -6,7 +6,6 @@ module Mongoid
       def initialize
         self.track_history = true
       end
-
     end
   end
 end

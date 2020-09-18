@@ -1,7 +1,6 @@
 module Mongoid
   module Delorean
     module Trackable
-
       def self.included(klass)
         super
         klass.field :version, type: Integer, default: 0
@@ -11,28 +10,33 @@ module Mongoid
       end
 
       def versions
-        Mongoid::Delorean::History.where(original_class: self.class.name, original_class_id: self.id).order_by(version: 'asce')
+        Mongoid::Delorean::History.where(original_class: self.class.name,
+                                         original_class_id: id)
+                                  .order_by(version: 'asce')
       end
 
       def save_version
-        if self.track_history?
-          last_version = self.versions.last
+        if track_history?
+          last_version = versions.last
           _version = last_version ? last_version.version + 1 : 1
 
-          _attributes = self.attributes_with_relations
-          _attributes.merge!("version" => _version)
-          _changes = self.changes_with_relations.dup
-          _changes.merge!("version" => [self.version_was, _version])
+          _attributes = attributes_with_relations
+          _attributes['version'] = _version
+          _changes = changes_with_relations.dup
+          _changes['version'] = [version_was, _version]
 
-          Mongoid::Delorean::History.create(original_class: self.class.name, original_class_id: self.id, version: _version, altered_attributes: _changes, full_attributes: _attributes)
-          self.without_history_tracking do
+          Mongoid::Delorean::History.create(original_class: self.class.name,
+                                            original_class_id: id,
+                                            version: _version,
+                                            altered_attributes: _changes,
+                                            full_attributes: _attributes)
+          without_history_tracking do
             self.version = _version
-            # self.save!
-            unless(self.new_record?)
+            unless new_record?
               if ::Mongoid.const_defined? :Observer
-                self.set(:version, _version)
+                set(:version, _version)
               else
-                self.set(version: _version)
+                set(version: _version)
               end
             end
           end
@@ -59,51 +63,46 @@ module Mongoid
       end
 
       def revert!(version = (self.version - 1))
-        old_version = self.versions.where(version: version).first
+        old_version = versions.where(version: version).first
         if old_version
           old_version.full_attributes.each do |key, value|
-            self.write_attribute(key, value)
+            write_attribute(key, value)
           end
-          self.save!
+          save!
         end
       end
 
       module CommonEmbeddedMethods
-
         def save_version
-          if self._parent.respond_to?(:save_version)
-            if self._parent.respond_to?(:track_history?)
-              if self._parent.track_history?
-                self._parent.save_version
-              end
+          if _parent.respond_to?(:save_version)
+            if _parent.respond_to?(:track_history?)
+              _parent.save_version if _parent.track_history?
             else
-              self._parent.save_version
+              _parent.save_version
             end
           end
 
           true
         end
-
       end
 
       module CommonInstanceMethods
-
         def changes_with_relations
-          _changes = self.changes.dup
+          _changes = changes.dup
 
-          %w{version updated_at created_at}.each do |col|
+          %w[version updated_at created_at].each do |col|
             _changes.delete(col)
             _changes.delete(col.to_sym)
           end
 
           relation_changes = {}
-          self.embedded_relations.each do |name, details|
-            relation = self.send(name)
+          embedded_relations.each do |name, details|
+            relation = send(name)
             relation_changes[name] = []
-            if details.relation == Mongoid::Relations::Embedded::One
+            if details.is_a? Mongoid::Association::Embedded::EmbedsOne
               relation_changes[name] = relation.changes_with_relations if relation
             else
-              r_changes = relation.map {|o| o.changes_with_relations}
+              r_changes = relation.map { |o| o.changes_with_relations }
               relation_changes[name] << r_changes unless r_changes.empty?
               relation_changes[name].flatten!
             end
@@ -111,31 +110,29 @@ module Mongoid
           end
 
           _changes.merge!(relation_changes)
-          return _changes
+          _changes
         end
 
         def attributes_with_relations
-          _attributes = self.attributes.dup
+          _attributes = attributes.dup
 
           relation_attrs = {}
-          self.embedded_relations.each do |name, details|
-            relation = self.send(name)
-            if details.relation == Mongoid::Relations::Embedded::One
+          embedded_relations.each do |name, details|
+            relation = send(name)
+            if details.is_a? Mongoid::Association::Embedded::EmbedsOne
               relation_attrs[name] = relation.attributes_with_relations if relation
             else
               relation_attrs[name] = []
-              r_attrs = relation.map {|o| o.attributes_with_relations}
+              r_attrs = relation.map { |o| o.attributes_with_relations }
               relation_attrs[name] << r_attrs unless r_attrs.empty?
-              r_changes = relation.map {|o| o.changes}
+              r_changes = relation.map { |o| o.changes }
               relation_attrs[name].flatten!
             end
           end
           _attributes.merge!(relation_attrs)
-          return _attributes
+          _attributes
         end
-
       end
-
     end
   end
 end
