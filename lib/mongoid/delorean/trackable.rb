@@ -10,7 +10,9 @@ module Mongoid
       end
 
       def versions
-        Mongoid::Delorean::History.where(original_class: self.class.name, original_class_id: id).order_by(version: 'asce')
+        Mongoid::Delorean::History.where(original_class: self.class.name,
+                                         original_class_id: id)
+                                  .order_by(version: 'asce')
       end
 
       def save_version
@@ -19,14 +21,17 @@ module Mongoid
           _version = last_version ? last_version.version + 1 : 1
 
           _attributes = attributes_with_relations
-          _attributes.merge!('version' => _version)
+          _attributes['version'] = _version
           _changes = changes_with_relations.dup
-          _changes.merge!('version' => [version_was, _version])
+          _changes['version'] = [version_was, _version]
 
-          Mongoid::Delorean::History.create(original_class: self.class.name, original_class_id: id, version: _version, altered_attributes: _changes, full_attributes: _attributes)
+          Mongoid::Delorean::History.create(original_class: self.class.name,
+                                            original_class_id: id,
+                                            version: _version,
+                                            altered_attributes: _changes,
+                                            full_attributes: _attributes)
           without_history_tracking do
             self.version = _version
-            # self.save!
             unless new_record?
               if ::Mongoid.const_defined? :Observer
                 set(:version, _version)
@@ -94,8 +99,7 @@ module Mongoid
           embedded_relations.each do |name, details|
             relation = send(name)
             relation_changes[name] = []
-            if details.relation == Mongoid::Association::Embedded::EmbedsOne::Proxy
-
+            if details.is_a? Mongoid::Association::Embedded::EmbedsOne
               relation_changes[name] = relation.changes_with_relations if relation
             else
               r_changes = relation.map { |o| o.changes_with_relations }
@@ -115,7 +119,7 @@ module Mongoid
           relation_attrs = {}
           embedded_relations.each do |name, details|
             relation = send(name)
-            if details.relation == Mongoid::Association::Embedded::EmbedsOne::Proxy
+            if details.is_a? Mongoid::Association::Embedded::EmbedsOne
               relation_attrs[name] = relation.attributes_with_relations if relation
             else
               relation_attrs[name] = []
@@ -127,7 +131,7 @@ module Mongoid
           end
           _attributes.merge!(relation_attrs)
           _attributes
-       end
+        end
       end
     end
   end

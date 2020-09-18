@@ -7,8 +7,10 @@ Gem::Specification.new do |gem|
   gem.version       = Mongoid::Delorean::VERSION
   gem.authors       = ['Mark Bates']
   gem.email         = ['mark@markbates.com']
-  gem.description   = 'A simple Mongoid 3 versioning system that works with embedded documents.'
-  gem.summary       = 'A simple Mongoid 3 versioning system that works with embedded documents.'
+  gem.description   = 'A simple Mongoid versioning system that works with '\
+                      'embedded documents.'
+  gem.summary       = 'A simple Mongoid versioning system that works with '\
+                      'embedded documents.'
   gem.homepage      = ''
 
   gem.files         = `git ls-files`.split($/)
@@ -18,9 +20,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency('mongoid', '>=7.0', '<8.0.0')
 
-  gem.add_development_dependency('rubocop')
   gem.add_development_dependency('database_cleaner')
   gem.add_development_dependency('rake')
   gem.add_development_dependency('rspec')
-  gem.add_development_dependency('rubocop-rspec')
 end

@@ -43,30 +43,38 @@ describe Mongoid::Delorean::Trackable do
     it 'tracks the changes that were made' do
       u = User.create!(name: 'Mark')
       version = u.versions.first
-      version.altered_attributes.should eql({'_id' => [nil, u.id], 'version' => [nil, 1], 'name' => [nil, 'Mark']})
+      version.altered_attributes.should eql(
+        { '_id' => [nil, u.id], 'version' => [nil, 1], 'name' => [nil, 'Mark'] }
+      )
 
       u.update_attributes(age: 36)
       version = u.versions.last
-      version.altered_attributes.should eql({'version' => [1, 2], 'age' => [nil, 36]})
+      version.altered_attributes.should eql(
+        { 'version' => [1, 2], 'age' => [nil, 36] }
+      )
     end
 
     it 'tracks the full set of attributes at the time of saving' do
       u = User.create!(name: 'Mark')
 
       version = u.versions.first
-      version.full_attributes.should eql({'_id' => u.id, 'version' => 1, 'name' => 'Mark'})
+      version.full_attributes.should eql(
+        { '_id' => u.id, 'version' => 1, 'name' => 'Mark' }
+      )
 
       u.update_attributes(age: 36)
 
       version = u.versions.last
-      version.full_attributes.except('created_at', 'updated_at').should eql({'_id' => u.id, 'version' => 2, 'name' => 'Mark', 'age' => 36})
+      version.full_attributes.except('created_at', 'updated_at').should eql(
+        { '_id' => u.id, 'version' => 2, 'name' => 'Mark', 'age' => 36 }
+      )
     end
 
     it 'passes validate options to save' do
       u = User.create!(email: 'test@example.com')
 
       u.email = 'invalid'
-      expect { u.save! }.to raise_error
+      expect { u.save! }.to raise_error(Mongoid::Errors::Validations)
       expect { u.save!(validate: false) }.not_to raise_error
     end
 
@@ -129,7 +137,13 @@ describe Mongoid::Delorean::Trackable do
       a = Article.create!(name: 'My Article')
 
       version = a.versions.first
-      version.altered_attributes.should eql({'_id' => [nil, a.id], 'version' => [nil, 1], 'name' => [nil, 'My Article']})
+      version.altered_attributes.should eql(
+        {
+          '_id' => [nil, a.id],
+          'version' => [nil, 1],
+          'name' => [nil, 'My Article']
+        }
+      )
     end
 
     it 'tracks the changes including embedded docs' do
@@ -138,52 +152,106 @@ describe Mongoid::Delorean::Trackable do
       a.save!
 
       version = a.versions.first
-      version.altered_attributes.should eql({'_id' => [nil, a.id], 'version' => [nil, 1], 'name' => [nil, 'My Article'], 'pages' => [{'_id' => [nil, page.id], 'name' => [nil, 'Page 1']}]})
+      version.altered_attributes.should eql(
+        { '_id' => [nil, a.id],
+          'version' => [nil, 1],
+          'name' => [nil, 'My Article'],
+          'pages' => [{ '_id' => [nil, page.id], 'name' => [nil, 'Page 1'] }] }
+      )
 
       page.name = 'The Page 1'
       a.save!
 
       version = a.versions.last
-      version.altered_attributes.should eql({'pages' => [{'name' => ['Page 1', 'The Page 1']}], 'version' => [1, 2]})
+      version.altered_attributes.should eql(
+        {
+          'pages' => [{ 'name' => ['Page 1', 'The Page 1'] }],
+          'version' => [1, 2]
+        }
+      )
 
       section = page.sections.build(body: 'some body text')
       page.save!
       a.save!
 
       version = a.versions.last
-      version.altered_attributes.should eql({'pages' => [{'sections' => [{'_id' => [nil, section.id], 'body' => [nil, 'some body text']}]}], 'version' => [2, 3]})
+      version.altered_attributes.should eql(
+        { 'pages' => [
+          { 'sections' => [{ '_id' => [nil, section.id],
+                             'body' => [nil, 'some body text'] }] }
+        ],
+          'version' => [2, 3] }
+      )
 
       footer = page.build_footer(content: 'some footer text')
       a.save!
 
       version = a.versions.last
-      version.altered_attributes.should eql({'pages' => [{'sections' => [{}], 'footer' => {'_id' => [nil, footer.id], 'content' => [nil, 'some footer text']}}], 'version' => [3, 4]})
+      version.altered_attributes.should eql(
+        {
+          'pages' => [{ 'sections' => [{}],
+                        'footer' => {
+                          '_id' => [nil, footer.id],
+                          'content' => [nil, 'some footer text']
+                        } }],
+          'version' => [3, 4]
+        }
+      )
     end
 
     it 'tracks the full set of attributes at the time of saving' do
       a = Article.create!(name: 'My Article')
 
       version = a.versions.first
-      version.full_attributes.should eql({'_id' => a.id, 'version' => 1, 'name' => 'My Article', 'pages' => [], 'authors' => []})
+      version.full_attributes.should eql(
+        { '_id' => a.id,
+          'version' => 1,
+          'name' => 'My Article',
+          'pages' => [],
+          'authors' => [] }
+      )
 
       a.update_attributes(summary: 'Summary about the article')
 
       version = a.versions.last
-      version.full_attributes.except('created_at', 'updated_at').should eql({'_id' => a.id, 'version' => 2, 'name' => 'My Article', 'summary' => 'Summary about the article', 'pages' => [], 'authors' => []})
+      version.full_attributes.except('created_at', 'updated_at').should eql(
+        { '_id' => a.id,
+          'version' => 2,
+          'name' => 'My Article',
+          'summary' => 'Summary about the article',
+          'pages' => [],
+          'authors' => [] }
+      )
     end
 
-    it 'tracks the full set of attributes including embeds at the time of saving' do
+    it 'tracks the full set of attributes including embeds at the time of '\
+       'saving' do
       a = Article.new(name: 'My Article')
       page = a.pages.build(name: 'Page 1')
       a.save!
 
       version = a.versions.first
-      version.full_attributes.should eql({'_id' => a.id, 'version' => 1, 'name' => 'My Article', 'pages' => [{'_id' => page.id, 'name' => 'Page 1', 'sections' => []}], 'authors' => []})
+      version.full_attributes.should eql(
+        { '_id' => a.id, 'version' => 1,
+          'name' => 'My Article',
+          'pages' => [{ '_id' => page.id,
+                        'name' => 'Page 1',
+                        'sections' => [] }],
+          'authors' => [] }
+      )
 
       a.update_attributes(summary: 'Summary about the article')
 
       version = a.versions.last
-      version.full_attributes.except('created_at', 'updated_at').should eql({'_id' => a.id, 'version' => 2, 'name' => 'My Article', 'pages' => [{'_id' => page.id, 'name' => 'Page 1', 'sections' => []}], 'summary' => 'Summary about the article', 'authors' => []})
+      version.full_attributes.except('created_at', 'updated_at').should eql(
+        { '_id' => a.id,
+          'version' => 2,
+          'name' => 'My Article',
+          'pages' => [{ '_id' => page.id,
+                        'name' => 'Page 1',
+                        'sections' => [] }],
+          'summary' => 'Summary about the article', 'authors' => [] }
+      )
     end
 
     it 'tracks changes when an embedded document is saved' do
@@ -215,7 +283,8 @@ describe Mongoid::Delorean::Trackable do
       a.version.should eql(2)
     end
 
-    it 'saves parent versions when saving embedded documents multiple levels deep' do
+    it 'saves parent versions when saving embedded documents multiple levels '\
+       'deep' do
       a = Article.new(name: 'Article 1')
       page = a.pages.build(name: 'Page 1')
       section = page.sections.build(body: 'some body text')
@@ -232,11 +301,12 @@ describe Mongoid::Delorean::Trackable do
       a.version.should eql(2)
     end
 
-    it "doesn't force validations on the parent document when an embedded document is saved" do
+    it 'doesn\'t force validations on the parent document when an embedded '\
+       'document is saved' do
       a = Article.new(name: 'Article 1', publish_year: -20)
       page = a.pages.build(name: 'Page 1')
 
-      expect { a.save! }.to raise_error
+      expect { a.save! }.to raise_error(Mongoid::Errors::Validations)
       a.save!(validate: false)
 
       a.version.should eql(1)
@@ -249,13 +319,14 @@ describe Mongoid::Delorean::Trackable do
       page.name.should eql('Number One Page')
     end
 
-    it "doesn't save the parent document when the embedded document fails validation" do
+    it 'doesn\'t save the parent document when the embedded document fails '\
+       'validation' do
       a = Article.new(name: 'Article 1')
       page = a.pages.build(name: 'Page 1', number: 1)
       a.save!
 
       page.number = -10
-      expect { page.save! }.to raise_error
+      expect { page.save! }.to raise_error(Mongoid::Errors::Validations)
 
       a.reload
       a.version.should eql(1)
