@@ -1,0 +1,15 @@
+# Should be used for development only (as this project is only a library)
+version: '3.7'
+services:
+  gem_publish:
+    build:
+      context: ./
+      dockerfile: ./docker/gem/Dockerfile
+    volumes:
+      - .:/app:cached
+    environment:
+      - GEMSPEC_FILE=mongoid_delorean.gemspec
+      - GITHUB_GLOOKO_BUNDLE_PASSWORD=$GITHUB_GLOOKO_BUNDLE_PASSWORD
+
+volumes:
+  bundle:
