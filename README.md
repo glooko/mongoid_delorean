@@ -109,3 +109,8 @@ a.version # => 1
 * Nick Muerdter
 * Felipe Rodrigues
 * Felipe Rodrigues de Almeida
+
+## Pushing new version to Github Packages
+
+1. Load your personal access token in environment as `GITHUB_GLOOKO_BUNDLE_PASSWORD`
+2. Run `docker compose run gem_publish`
